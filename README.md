@@ -43,3 +43,9 @@ npm run dev
 ```
 
 Frontend expects the backend at `http://localhost:5000` (see `frontend/src/api/complaints.js` — update the base URL after deploying).
+
+## One challenge
+The trickiest part was getting the frontend to actually deploy on Vercel. The build kept failing with "Command npm run build exited with 126," which turned out to be a permissions issue — the vite executable that npm installs wasn't runnable in Vercel's build environment. I fixed it by changing the build script in package.json to call vite directly through node (node node_modules/vite/bin/vite.js build) instead of relying on the shell shortcut. It took a couple of failed deploys and reading the build logs carefully to figure out where it was actually breaking.
+
+## One improvement
+Right now any logged-in warden or hostel manager can update or delete any complaint. With more time, I'd add block-level scoping so a warden only sees and manages complaints from their own hostel block, and maybe email/push notifications to the student when their complaint's status changes.
