@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // After deploying the backend, update this to your live Render URL
-const API_BASE = "http://localhost:5000/api/complaints";
+const API_BASE = "https://hostel-complaint-system-glht.onrender.com/api/complaints";
 
 export const fetchComplaints = (params = {}) =>
   axios.get(API_BASE, { params }).then((res) => res.data);
