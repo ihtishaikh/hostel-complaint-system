@@ -1,0 +1,451 @@
+/* ============================================================
+   AITM Hostel Complaint System
+   Design language: institutional record-keeping — a campus
+   hostel's paper requisition register, rebuilt for the screen.
+   Complaints read as stamped slips, not app "cards".
+   ============================================================ */
+
+:root {
+  --navy: #1b2a4a;
+  --navy-light: #2d4270;
+  --navy-pale: #e7ebf3;
+  --brass: #a6763d;
+  --brass-light: #c9a063;
+  --paper: #faf6ee;
+  --paper-dark: #efe8d8;
+  --page-bg: #f2eee2;
+  --ink: #22262e;
+  --ink-soft: #5c6570;
+  --rule: #d8cfb8;
+
+  --stamp-open: #b23a2e;
+  --stamp-progress: #1e5aa8;
+  --stamp-resolved: #2f6b3a;
+
+  --font-display: "Source Serif 4", Georgia, serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--page-bg);
+  background-image:
+    linear-gradient(var(--page-bg) 0%, var(--page-bg) 100%),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(27,42,74,0.03) 40px);
+  color: var(--ink);
+}
+
+.app { max-width: 920px; margin: 0 auto; padding: 0 16px 40px; }
+
+/* ---------- Letterhead ---------- */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: var(--navy);
+  color: #fff;
+  margin: 0 -16px 28px;
+  padding: 20px 24px;
+  border-bottom: 4px solid var(--brass);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.crest {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--brass-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--brass-light);
+  flex-shrink: 0;
+}
+.brand-text h1 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+.brand-text p {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--navy-pale);
+  opacity: 0.85;
+}
+
+.app-header nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.app-header nav button {
+  padding: 8px 14px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: transparent;
+  color: #fff;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, border-color 0.15s;
+}
+.app-header nav button:hover { background: rgba(255,255,255,0.08); }
+.app-header nav button.active {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: var(--navy);
+  font-weight: 600;
+}
+
+/* ---------- Stats ledger ---------- */
+.stats-bar {
+  display: flex;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+.stat {
+  flex: 1;
+  padding: 14px 10px;
+  text-align: center;
+  border-right: 1px solid var(--rule);
+}
+.stat:last-child { border-right: none; }
+.stat-count {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.stat-open .stat-count { color: var(--stamp-open); }
+.stat-progress .stat-count { color: var(--stamp-progress); }
+.stat-resolved .stat-count { color: var(--stamp-resolved); }
+
+/* ---------- Filter rail ---------- */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-bar input, .filter-bar select {
+  padding: 9px 12px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  border-radius: 3px;
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  color: var(--ink);
+}
+.filter-bar input { flex: 1; min-width: 160px; }
+.filter-bar input:focus, .filter-bar select:focus,
+.complaint-form input:focus, .complaint-form select:focus, .complaint-form textarea:focus {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+}
+
+/* ---------- Complaint slips ---------- */
+.complaint-list { display: flex; flex-direction: column; gap: 12px; }
+
+.complaint-card {
+  position: relative;
+  display: flex;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-left: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.complaint-card:hover { box-shadow: 0 3px 10px rgba(27,42,74,0.12); transform: translateY(-1px); }
+
+/* perforated stub edge */
+.slip-stub {
+  width: 34px;
+  flex-shrink: 0;
+  background: var(--navy);
+  border-radius: 3px 0 0 3px;
+  background-image: radial-gradient(circle, var(--page-bg) 2.5px, transparent 2.6px);
+  background-size: 100% 14px;
+  background-position: center;
+  position: relative;
+}
+.slip-stub::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; right: -1px;
+  width: 1px;
+  border-right: 2px dashed var(--paper-dark);
+}
+
+.slip-body { flex: 1; padding: 14px 16px; min-width: 0; }
+
+.complaint-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ref-no {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--brass);
+  margin-bottom: 3px;
+}
+.complaint-card-header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.complaint-meta {
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+  margin: 5px 0;
+  text-transform: capitalize;
+  font-family: var(--font-body);
+}
+.complaint-desc { font-size: 0.88rem; margin: 4px 0; color: var(--ink); line-height: 1.4; }
+.complaint-date {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+}
+
+/* Rubber-stamp status badge */
+.stamp {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  transform: rotate(-4deg);
+  white-space: nowrap;
+}
+.stamp-open { color: var(--stamp-open); }
+.stamp-progress { color: var(--stamp-progress); }
+.stamp-resolved { color: var(--stamp-resolved); }
+
+.empty-state {
+  text-align: center;
+  color: var(--ink-soft);
+  padding: 48px 0;
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+/* ---------- Requisition form ---------- */
+.complaint-form {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 26px 24px;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.complaint-form h2 {
+  margin: 0 0 4px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: var(--navy);
+}
+.form-sub {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 0 0 18px;
+}
+.complaint-form label {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+}
+.complaint-form input,
+.complaint-form select,
+.complaint-form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 7px;
+  padding: 9px 2px;
+  border: none;
+  border-bottom: 1.5px solid var(--rule);
+  background: transparent;
+  border-radius: 0;
+  font-size: 0.92rem;
+  font-weight: normal;
+  font-family: var(--font-body);
+  color: var(--ink);
+  text-transform: none;
+  letter-spacing: normal;
+}
+.complaint-form textarea { border: 1px solid var(--rule); padding: 8px 10px; border-radius: 3px; }
+.complaint-form button {
+  width: 100%;
+  padding: 12px;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  margin-top: 6px;
+  transition: background 0.15s;
+}
+.complaint-form button:hover:not(:disabled) { background: var(--navy-light); }
+.complaint-form button:disabled { opacity: 0.55; cursor: not-allowed; }
+.error {
+  color: var(--stamp-open);
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 5px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  font-family: var(--font-body);
+}
+
+/* ---------- Detail panel ---------- */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,26,38,0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 10;
+}
+.detail-panel {
+  background: var(--paper);
+  border-radius: 5px;
+  padding: 28px 26px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  border-top: 4px solid var(--brass);
+}
+.detail-panel h2 {
+  font-family: var(--font-display);
+  color: var(--navy);
+  margin: 6px 0 4px;
+  font-size: 1.3rem;
+}
+.close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+
+.detail-panel h4 {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--brass);
+  margin: 20px 0 8px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 6px;
+}
+.status-history { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: var(--ink); }
+.status-history li {
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--rule);
+  text-transform: capitalize;
+  font-family: var(--font-body);
+}
+.status-history li:last-child { border-bottom: none; }
+.status-history strong { font-family: var(--font-mono); color: var(--navy); }
+
+.status-update { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+.status-update input {
+  flex: 1;
+  min-width: 140px;
+  padding: 9px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-family: var(--font-body);
+}
+.status-update button {
+  padding: 9px 16px;
+  background: var(--navy);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.status-update button:hover { background: var(--navy-light); }
+.danger-btn {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  color: var(--stamp-open);
+  border: 1px solid var(--stamp-open);
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+.danger-btn:hover { background: rgba(178,58,46,0.06); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 620px) {
+  .app-header { flex-direction: column; align-items: flex-start; margin: 0 -16px 22px; padding: 16px 18px; }
+  .app-header nav { width: 100%; }
+  .app-header nav button { flex: 1; }
+  .complaint-card-header { flex-direction: column; }
+  .stamp { transform: none; }
+  .stats-bar { flex-wrap: wrap; }
+  .stat { flex: 1 1 33%; }
+}
